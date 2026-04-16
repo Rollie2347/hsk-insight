@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HSK Insight — AI Wallet Analytics on HashKey Chain</title>
+  <style>
+    :root {
+      --bg: #0d0f14;
+      --card: #161a23;
+      --border: #252a36;
+      --accent: #4f8ef7;
+      --accent2: #7c5cbf;
+      --text: #e8eaf0;
+      --muted: #7a8299;
+      --green: #3dd68c;
+      --red: #f76f6f;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+
+    header {
+      background: linear-gradient(135deg, #0d0f14 0%, #1a1040 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 40px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    header h1 { font-size: 1.6rem; font-weight: 700; }
+    header span { font-size: 0.85rem; color: var(--muted); }
+    .badge {
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      color: white; font-size: 0.7rem; font-weight: 700;
+      padding: 3px 10px; border-radius: 20px; letter-spacing: 0.5px;
+    }
+
+    main { max-width: 900px; margin: 40px auto; padding: 0 20px; }
+
+    .search-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 32px; margin-bottom: 28px;
+    }
+    .search-card h2 { font-size: 1.1rem; margin-bottom: 18px; color: var(--text); }
+    .input-row { display: flex; gap: 10px; }
+    input[type="text"] {
+      flex: 1; background: var(--bg); border: 1px solid var(--border);
+      color: var(--text); padding: 12px 16px; border-radius: 10px;
+      font-size: 0.95rem; outline: none;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus { border-color: var(--accent); }
+    .toggle-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 0.85rem; color: var(--muted); }
+    button.primary {
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      color: white; border: none; padding: 12px 24px;
+      border-radius: 10px; font-size: 0.95rem; font-weight: 600;
+      cursor: pointer; transition: opacity 0.2s;
+      white-space: nowrap;
+    }
+    button.primary:hover { opacity: 0.85; }
+    button.primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px; }
+    .stat-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px;
+    }
+    .stat-card .label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+    .stat-card .value { font-size: 1.6rem; font-weight: 700; }
+    .stat-card .value.green { color: var(--green); }
+
+    .analysis-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 28px; margin-bottom: 24px;
+    }
+    .analysis-card h3 { font-size: 1rem; color: var(--accent); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .analysis-text { font-size: 0.9rem; line-height: 1.7; color: var(--text); white-space: pre-wrap; }
+
+    .txs-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 28px; margin-bottom: 24px;
+    }
+    .txs-card h3 { font-size: 1rem; color: var(--muted); margin-bottom: 16px; }
+    .tx-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 0.82rem;
+    }
+    .tx-row:last-child { border-bottom: none; }
+    .tx-hash { font-family: monospace; color: var(--accent); }
+    .tx-dir { font-weight: 700; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; }
+    .tx-dir.in { background: rgba(61,214,140,0.15); color: var(--green); }
+    .tx-dir.out { background: rgba(247,111,111,0.15); color: var(--red); }
+
+    .chat-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 28px;
+    }
+    .chat-card h3 { font-size: 1rem; color: var(--accent); margin-bottom: 16px; }
+    .chat-messages { min-height: 120px; max-height: 300px; overflow-y: auto; margin-bottom: 16px; }
+    .msg { margin-bottom: 12px; }
+    .msg .sender { font-size: 0.75rem; color: var(--muted); margin-bottom: 4px; }
+    .msg .bubble {
+      display: inline-block; padding: 10px 14px; border-radius: 10px;
+      font-size: 0.88rem; line-height: 1.5; max-width: 85%;
+    }
+    .msg.user .bubble { background: rgba(79,142,247,0.15); color: var(--text); }
+    .msg.ai .bubble { background: rgba(124,92,191,0.15); color: var(--text); white-space: pre-wrap; }
+    .chat-input-row { display: flex; gap: 10px; }
+
+    .hidden { display: none; }
+    .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+    .empty-state .icon { font-size: 3rem; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>⛓️ HSK Insight</h1>
+    <span>AI-Powered Wallet Analytics</span>
+  </div>
+  <span class="badge">HashKey Chain</span>
+</header>
+
+<main>
+  <!-- Search -->
+  <div class="search-card">
+    <h2>Analyze a Wallet</h2>
+    <div class="input-row">
+      <input type="text" id="addressInput" placeholder="Enter HashKey Chain wallet address (0x...)" />
+      <button class="primary" id="analyzeBtn" onclick="analyzeWallet()">Analyze</button>
+    </div>
+    <div class="toggle-row">
+      <input type="checkbox" id="testnetToggle" />
+      <label for="testnetToggle">Use Testnet</label>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div class="empty-state" id="emptyState">
+    <div class="icon">🔍</div>
+    <p>Enter a HashKey Chain address above to get started.<br/>The AI will analyze on-chain activity and provide insights.</p>
+  </div>
+
+  <!-- Results (hidden until analyzed) -->
+  <div id="results" class="hidden">
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="label">HSK Balance</div>
+        <div class="value green" id="statBalance">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Total Transactions</div>
+        <div class="value" id="statTxCount">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Network</div>
+        <div class="value" id="statNetwork" style="font-size:1.1rem">—</div>
+      </div>
+    </div>
+
+    <!-- AI Analysis -->
+    <div class="analysis-card">
+      <h3>🤖 AI Analysis</h3>
+      <div class="analysis-text" id="analysisText"></div>
+    </div>
+
+    <!-- Recent TXs -->
+    <div class="txs-card" id="txsCard">
+      <h3>Recent Transactions</h3>
+      <div id="txsList"></div>
+    </div>
+
+    <!-- Chat -->
+    <div class="chat-card">
+      <h3>💬 Ask About This Wallet</h3>
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="chat-input-row">
+        <input type="text" id="chatInput" placeholder="Ask anything... e.g. 'What's my biggest transaction?'" onkeydown="if(event.key==='Enter') sendChat()" />
+        <button class="primary" id="chatBtn" onclick="sendChat()">Ask</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  const API = '';
+  let currentAddress = '';
+  let currentTestnet = false;
+  let chatHistory = [];
+
+  async function analyzeWallet() {
+    const address = document.getElementById('addressInput').value.trim();
+    const testnet = document.getElementById('testnetToggle').checked;
+    if (!address) return;
+
+    const btn = document.getElementById('analyzeBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>';
+
+    try {
+      const res = await fetch(`${API}/api/analyze`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ address, testnet })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Error');
+
+      currentAddress = address;
+      currentTestnet = testnet;
+      chatHistory = [];
+
+      // Stats
+      document.getElementById('statBalance').textContent = `${data.wallet.balance_hsk.toFixed(4)} HSK`;
+      document.getElementById('statTxCount').textContent = data.wallet.total_tx_count.toLocaleString();
+      document.getElementById('statNetwork').textContent = testnet ? '🧪 Testnet' : '🌐 Mainnet';
+
+      // Analysis
+      document.getElementById('analysisText').textContent = data.analysis;
+
+      // TXs
+      const txsList = document.getElementById('txsList');
+      if (data.wallet.recent_transactions.length === 0) {
+        txsList.innerHTML = '<p style="color:var(--muted);font-size:0.85rem">No recent transactions found in scanned blocks.</p>';
+      } else {
+        txsList.innerHTML = data.wallet.recent_transactions.map(tx => `
+          <div class="tx-row">
+            <span class="tx-hash">${tx.hash.slice(0,14)}…</span>
+            <span class="tx-dir ${tx.direction.toLowerCase()}">${tx.direction}</span>
+            <span>${tx.value_hsk.toFixed(4)} HSK</span>
+            <span style="color:var(--muted)">Block ${tx.block}</span>
+          </div>
+        `).join('');
+      }
+
+      // Show results
+      document.getElementById('emptyState').classList.add('hidden');
+      document.getElementById('results').classList.remove('hidden');
+      document.getElementById('chatMessages').innerHTML = '';
+
+    } catch(e) {
+      alert('Error: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Analyze';
+    }
+  }
+
+  async function sendChat() {
+    const input = document.getElementById('chatInput');
+    const msg = input.value.trim();
+    if (!msg || !currentAddress) return;
+
+    input.value = '';
+    appendMessage('user', msg);
+
+    const btn = document.getElementById('chatBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>';
+
+    try {
+      const res = await fetch(`${API}/api/chat`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          address: currentAddress,
+          testnet: currentTestnet,
+          message: msg,
+          history: chatHistory
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Error');
+
+      appendMessage('ai', data.reply);
+      chatHistory.push({role: 'user', content: msg});
+      chatHistory.push({role: 'assistant', content: data.reply});
+
+    } catch(e) {
+      appendMessage('ai', '⚠️ Error: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Ask';
+    }
+  }
+
+  function appendMessage(role, text) {
+    const container = document.getElementById('chatMessages');
+    const div = document.createElement('div');
+    div.className = `msg ${role}`;
+    div.innerHTML = `
+      <div class="sender">${role === 'user' ? '👤 You' : '🤖 HSK Insight AI'}</div>
+      <div class="bubble">${text}</div>
+    `;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+  }
+</script>
+</body>
+</html>
