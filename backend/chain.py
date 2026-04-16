@@ -2,7 +2,7 @@ from web3 import Web3
 from typing import Optional
 import os
 
-HASHKEY_RPC = os.getenv("HASHKEY_RPC_URL", "https://mainnet.hskchain.com")
+HASHKEY_RPC = os.getenv('HASHKEY_RPC_URL', 'https://mainnet.hsk.xyz')
 HASHKEY_TESTNET_RPC = os.getenv("HASHKEY_TESTNET_RPC_URL", "https://hashkeychain-testnet.alt.technology")
 
 def get_web3(testnet: bool = False) -> Web3:
