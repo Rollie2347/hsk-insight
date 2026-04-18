@@ -31,7 +31,7 @@ Recent Transactions (up to 10):
         prompt = f"Please provide a comprehensive analysis of this HashKey Chain wallet:\n{data_summary}"
 
     response = client.models.generate_content(
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         config=types.GenerateContentConfig(system_instruction=SYSTEM_PROMPT),
         contents=prompt
     )
@@ -55,7 +55,7 @@ Recent TXs: {json.dumps(wallet_data['recent_transactions'], indent=2)}
     history.append(types.Content(role="user", parts=[types.Part(text=new_message)]))
 
     response = client.models.generate_content(
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         config=types.GenerateContentConfig(system_instruction=SYSTEM_PROMPT),
         contents=history
     )
